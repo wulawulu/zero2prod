@@ -399,7 +399,9 @@ checksum = "defd4e7873dbddba6c7c91e199c7fcb946abc4a6a4ac3195400bcfb01b5de877"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits 0.2.16",
+ "wasm-bindgen",
  "windows-targets",
 ]
 
@@ -2137,6 +2139,9 @@ name = "uuid"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
+dependencies = [
+ "getrandom",
+]
 
 [[package]]
 name = "vcpkg"
@@ -2391,11 +2396,13 @@ name = "zero2prod"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "chrono",
  "config",
  "reqwest",
  "serde 1.0.188",
  "sqlx",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
