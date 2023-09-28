@@ -66,11 +66,12 @@ struct SendEmailRequest {
 
 #[cfg(test)]
 mod tests {
+    use actix_web::dev::Server;
     use fake::{Fake, Faker};
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::Sentence;
     use wiremock::{Mock, MockServer, ResponseTemplate};
-    use wiremock::matchers::any;
+    use wiremock::matchers::{any, header, header_exists, method, path};
     use super::*;
 
     #[tokio::test]
@@ -83,15 +84,18 @@ mod tests {
             Secret::new(Faker.fake()),
         );
 
-        Mock::given(any())
+        let subscriber_email = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
+        let subject: String = Sentence(1..2).fake();
+        let content: String = Sentence(1..10).fake();
+
+        Mock::given(header_exists("X-Postmark-Server-Token"))
+            .and(header("Content-Type","application/json"))
+            .and(path("/email"))
+            .and(method("POST"))
             .respond_with(ResponseTemplate::new(200))
             .expect(1)
             .mount(&mock_server)
             .await;
-
-        let subscriber_email = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-        let subject: String = Sentence(1..2).fake();
-        let content: String = Sentence(1..10).fake();
 
         let _ = email_client
             .send_email(subscriber_email, &subject, &content, &content)
