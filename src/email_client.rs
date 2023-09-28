@@ -66,12 +66,11 @@ struct SendEmailRequest {
 
 #[cfg(test)]
 mod tests {
-    use actix_web::dev::Server;
     use fake::{Fake, Faker};
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::Sentence;
     use wiremock::{Mock, MockServer, ResponseTemplate};
-    use wiremock::matchers::{any, header, header_exists, method, path};
+    use wiremock::matchers::{header, header_exists, method, path};
     use super::*;
 
     #[tokio::test]
