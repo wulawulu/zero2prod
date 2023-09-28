@@ -46,7 +46,7 @@ impl EmailClient {
             .post(&url)
             .header(
                 "X-Postmark-Server-Token",
-                self.authorization_token.expose_secret()
+                self.authorization_token.expose_secret(),
             )
             .json(&request_body)
             .send()
@@ -56,6 +56,7 @@ impl EmailClient {
 }
 
 #[derive(serde::Serialize)]
+#[serde(rename_all="PascalCase")]
 struct SendEmailRequest {
     from: String,
     to: String,
@@ -69,12 +70,12 @@ mod tests {
     use fake::{Fake, Faker};
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::Sentence;
-    use wiremock::{Mock, MockServer, ResponseTemplate};
+    use wiremock::{Mock, MockServer, Request, ResponseTemplate};
     use wiremock::matchers::{header, header_exists, method, path};
     use super::*;
 
     #[tokio::test]
-    async fn send_email_fires_a_request_to_base_url() {
+    async fn send_email_sends_the_expected_request() {
         let mock_server = MockServer::start().await;
         let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = EmailClient::new(
@@ -88,9 +89,10 @@ mod tests {
         let content: String = Sentence(1..10).fake();
 
         Mock::given(header_exists("X-Postmark-Server-Token"))
-            .and(header("Content-Type","application/json"))
+            .and(header("Content-Type", "application/json"))
             .and(path("/email"))
             .and(method("POST"))
+            .and(SendEmailBodyMatcher)
             .respond_with(ResponseTemplate::new(200))
             .expect(1)
             .mount(&mock_server)
@@ -99,5 +101,24 @@ mod tests {
         let _ = email_client
             .send_email(subscriber_email, &subject, &content, &content)
             .await;
+    }
+
+    struct SendEmailBodyMatcher;
+
+    impl wiremock::Match for SendEmailBodyMatcher {
+        fn matches(&self, request: &Request) -> bool {
+            let result: Result<serde_json::Value, _> =
+                serde_json::from_slice(&request.body);
+            if let Ok(body) = result {
+                dbg!(&body);
+                body.get("From").is_some()
+                    &&body.get("To").is_some()
+                    &&body.get("Subject").is_some()
+                    &&body.get("HtmlBody").is_some()
+                    &&body.get("TextBody").is_some()
+            } else {
+                false
+            }
+        }
     }
 }
