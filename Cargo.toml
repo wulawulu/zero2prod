@@ -34,7 +34,6 @@ rand = { version = "0.8", features = ["std_rng"] }
 thiserror = "1"
 anyhow = "1"
 base64 = "0.13"
-sha3 = "0.9"
 argon2 = {version = "0.3", features = ["std"]}
 
 [dependencies.sqlx]
