@@ -118,7 +118,7 @@ struct Credentials {
 async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
-) -> Result<uuid::Uuid, PublishError> {
+) -> Result<Uuid, PublishError> {
     let mut user_id = None;
     let mut expected_password_hash = Secret::new(
         "$argon2id$v=19$m=15000,t=2,p=1$\
