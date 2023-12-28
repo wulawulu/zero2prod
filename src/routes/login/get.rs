@@ -1,9 +1,7 @@
 use actix_web::http::header::ContentType;
-use actix_web::{HttpResponse, HttpRequest};
+use actix_web::{HttpRequest, HttpResponse};
 
-pub async fn login_form(
-    request: HttpRequest
-) -> HttpResponse {
+pub async fn login_form(request: HttpRequest) -> HttpResponse {
     let error_html = match request.cookie("_flash") {
         None => "".into(),
         Some(cookie) => {

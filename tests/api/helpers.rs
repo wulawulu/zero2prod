@@ -25,7 +25,7 @@ pub struct TestApp {
     pub email_server: MockServer,
     pub port: u16,
     pub test_user: TestUser,
-    pub api_client: reqwest::Client
+    pub api_client: reqwest::Client,
 }
 
 pub struct ConfirmationLinks {
@@ -88,9 +88,9 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
-    pub async fn get_login_html(&self) -> String{
+    pub async fn get_login_html(&self) -> String {
         self.api_client
-            .get(&format!("{}/login",&self.address))
+            .get(&format!("{}/login", &self.address))
             .send()
             .await
             .expect("Failed to execute request.")
