@@ -1,10 +1,10 @@
-use std::fmt::Formatter;
-use actix_web::{HttpResponse, ResponseError, web};
+use crate::routes::error_chain_fmt;
 use actix_web::http::StatusCode;
+use actix_web::{web, HttpResponse, ResponseError};
 use anyhow::Context;
 use sqlx::PgPool;
+use std::fmt::Formatter;
 use uuid::Uuid;
-use crate::routes::error_chain_fmt;
 
 #[derive(serde::Deserialize)]
 pub struct Parameters {
@@ -49,18 +49,14 @@ pub async fn confirm(
     Ok(HttpResponse::Ok().finish())
 }
 
-
 #[tracing::instrument(name = "Mark subscriber as confirmed", skip(subscriber_id, pool))]
-pub async fn confirm_subscriber(
-    pool: &PgPool,
-    subscriber_id: Uuid,
-) -> Result<(), sqlx::Error> {
+pub async fn confirm_subscriber(pool: &PgPool, subscriber_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"UPDATE subscriptions SET status = 'confirmed' WHERE id = $1"#,
         subscriber_id,
     )
-        .execute(pool)
-        .await?;
+    .execute(pool)
+    .await?;
     Ok(())
 }
 
@@ -73,7 +69,7 @@ pub async fn get_subscriber_id_from_token(
         r#"SELECT subscriber_id FROM subscription_tokens WHERE subscription_token = $1"#,
         subscription_token,
     )
-        .fetch_optional(pool)
-        .await?;
+    .fetch_optional(pool)
+    .await?;
     Ok(result.map(|r| r.subscriber_id))
 }

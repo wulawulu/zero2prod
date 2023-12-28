@@ -1,7 +1,7 @@
+use crate::helpers::{spawn_app, ConfirmationLinks, TestApp};
 use uuid::Uuid;
-use wiremock::matchers::{any, path, method};
+use wiremock::matchers::{any, method, path};
 use wiremock::{Mock, ResponseTemplate};
-use crate::helpers::{ConfirmationLinks, spawn_app, TestApp};
 
 #[tokio::test]
 async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
@@ -14,8 +14,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
         .mount(&app.email_server)
         .await;
 
-    let newsletter_request_body =
-        serde_json::json!({
+    let newsletter_request_body = serde_json::json!({
         "title":"Newsletter title",
         "content":{
             "text":"Newsletter body as plain text",
@@ -39,8 +38,7 @@ async fn newsletters_are_delivered_to_confirmed_subscriber() {
         .mount(&app.email_server)
         .await;
 
-    let newsletter_request_body =
-        serde_json::json!({
+    let newsletter_request_body = serde_json::json!({
         "title":"Newsletter title",
         "content":{
             "text":"Newsletter body as plain text",
@@ -64,15 +62,11 @@ async fn newsletters_returns_400_for_invalid_data() {
             }),
             "missing title",
         ),
-        (
-            serde_json::json!({"text":"Newsletter!"}),
-            "missing content",
-        ),
+        (serde_json::json!({"text":"Newsletter!"}), "missing content"),
     ];
 
     for (invalid_body, error_message) in test_cases {
         let response = app.post_newsletters(invalid_body).await;
-
 
         assert_eq!(
             400,
@@ -135,7 +129,10 @@ async fn requests_missing_authorization_are_rejected() {
         .expect("Failed to execute request.");
     // Assert
     assert_eq!(401, response.status().as_u16());
-    assert_eq!(r#"Basic realm="publish""#, response.headers()["WWW-Authenticate"]);
+    assert_eq!(
+        r#"Basic realm="publish""#,
+        response.headers()["WWW-Authenticate"]
+    );
 }
 
 #[tokio::test]

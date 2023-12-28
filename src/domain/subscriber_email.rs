@@ -30,8 +30,8 @@ impl std::fmt::Display for SubscriberEmail {
 mod tests {
     use super::SubscriberEmail;
     use claim::assert_err;
-    use fake::Fake;
     use fake::faker::internet::en::SafeEmail;
+    use fake::Fake;
     use quickcheck::Gen;
 
     #[test]
@@ -67,5 +67,3 @@ mod tests {
         SubscriberEmail::parse(valid_email.0).is_ok()
     }
 }
-
-

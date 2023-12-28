@@ -1,6 +1,6 @@
+use crate::domain::SubscriberEmail;
 use reqwest::Client;
 use secrecy::{ExposeSecret, Secret};
-use crate::domain::SubscriberEmail;
 
 pub struct EmailClient {
     http_client: Client,
@@ -16,10 +16,7 @@ impl EmailClient {
         authorization_token: Secret<String>,
         duration: std::time::Duration,
     ) -> Self {
-        let http_client = Client::builder()
-            .timeout(duration)
-            .build()
-            .unwrap();
+        let http_client = Client::builder().timeout(duration).build().unwrap();
         Self {
             http_client,
             base_url,
@@ -45,8 +42,7 @@ impl EmailClient {
             html_body: html_content,
             text_body: text_content,
         };
-        self
-            .http_client
+        self.http_client
             .post(&url)
             .header(
                 "X-Postmark-Server-Token",
@@ -72,13 +68,13 @@ struct SendEmailRequest<'a> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use claim::{assert_err, assert_ok};
-    use fake::{Fake, Faker};
     use fake::faker::internet::en::SafeEmail;
     use fake::faker::lorem::en::Sentence;
-    use wiremock::{Mock, MockServer, Request, ResponseTemplate};
+    use fake::{Fake, Faker};
     use wiremock::matchers::{any, header, header_exists, method, path};
-    use super::*;
+    use wiremock::{Mock, MockServer, Request, ResponseTemplate};
 
     #[tokio::test]
     async fn send_email_sends_the_expected_request() {
@@ -108,8 +104,7 @@ mod tests {
 
     impl wiremock::Match for SendEmailBodyMatcher {
         fn matches(&self, request: &Request) -> bool {
-            let result: Result<serde_json::Value, _> =
-                serde_json::from_slice(&request.body);
+            let result: Result<serde_json::Value, _> = serde_json::from_slice(&request.body);
             if let Ok(body) = result {
                 dbg!(&body);
                 body.get("From").is_some()
@@ -176,8 +171,7 @@ mod tests {
         let subject = subject();
         let content = content();
 
-        let response = ResponseTemplate::new(200)
-            .set_delay(std::time::Duration::from_secs(180));
+        let response = ResponseTemplate::new(200).set_delay(std::time::Duration::from_secs(180));
         Mock::given(any())
             .respond_with(response)
             .expect(1)

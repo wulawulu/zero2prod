@@ -1,12 +1,12 @@
-use argon2::{Algorithm, Argon2, Params, PasswordHasher, Version};
 use argon2::password_hash::SaltString;
-use sqlx::{Connection, Executor, PgConnection, PgPool};
+use argon2::{Algorithm, Argon2, Params, PasswordHasher, Version};
 use once_cell::sync::Lazy;
 use reqwest::Url;
+use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use wiremock::MockServer;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
-use zero2prod::startup::{Application, get_connection_pool};
+use zero2prod::startup::{get_connection_pool, Application};
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
 static TRACING: Lazy<()> = Lazy::new(|| {
@@ -30,7 +30,6 @@ pub struct TestApp {
 pub struct ConfirmationLinks {
     pub html: reqwest::Url,
     pub plain_text: reqwest::Url,
-
 }
 
 impl TestApp {
@@ -44,13 +43,8 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
-    pub fn get_confirmation_links(
-        &self,
-        email_request: &wiremock::Request,
-    ) -> ConfirmationLinks {
-        let body: serde_json::Value = serde_json::from_slice(
-            &email_request.body
-        ).unwrap();
+    pub fn get_confirmation_links(&self, email_request: &wiremock::Request) -> ConfirmationLinks {
+        let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
 
         let get_link = |s: &str| {
             let links: Vec<_> = linkify::LinkFinder::new()
@@ -68,10 +62,7 @@ impl TestApp {
 
         let html = get_link(&body["HtmlBody"].as_str().unwrap());
         let plain_text = get_link(&body["TextBody"].as_str().unwrap());
-        ConfirmationLinks {
-            html,
-            plain_text,
-        }
+        ConfirmationLinks { html, plain_text }
     }
 
     pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
@@ -83,7 +74,6 @@ impl TestApp {
             .await
             .expect("Failed to execute request.")
     }
-
 }
 
 pub async fn spawn_app() -> TestApp {
@@ -99,7 +89,6 @@ pub async fn spawn_app() -> TestApp {
         c
     };
 
-
     configure_database(&configuration.database).await;
 
     let application = Application::build(configuration.clone())
@@ -108,13 +97,12 @@ pub async fn spawn_app() -> TestApp {
     let application_port = application.port();
     let _ = tokio::spawn(application.run_until_stopped());
 
-
     let test_app = TestApp {
         address: format!("http://127.0.0.1:{}", application_port),
         port: application_port,
         db_pool: get_connection_pool(&configuration.database),
         email_server,
-        test_user:TestUser::generate()
+        test_user: TestUser::generate(),
     };
     test_app.test_user.store(&test_app.db_pool).await;
     test_app
@@ -162,18 +150,18 @@ impl TestUser {
             Version::V0x13,
             Params::new(15000, 2, 1, None).unwrap(),
         )
-            .hash_password(self.password.as_bytes(), &salt)
-            .unwrap()
-            .to_string();
+        .hash_password(self.password.as_bytes(), &salt)
+        .unwrap()
+        .to_string();
         sqlx::query!(
             "INSERT INTO users (user_id, username, password_hash)
             VALUES ($1, $2, $3)",
             self.user_id,
             self.username,
             password_hash,
-            )
-            .execute(pool)
-            .await
-            .expect("Failed to store test user.");
+        )
+        .execute(pool)
+        .await
+        .expect("Failed to store test user.");
     }
 }

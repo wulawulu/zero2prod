@@ -1,14 +1,14 @@
-use std::fmt::Formatter;
-use actix_web::{HttpRequest, HttpResponse, ResponseError, web};
-use actix_web::http::header::{HeaderMap, HeaderValue};
-use actix_web::http::{header, StatusCode};
-use anyhow::Context;
-use secrecy::Secret;
-use sqlx::PgPool;
-use crate::authentication::{validate_credentials,AuthError, Credentials};
+use crate::authentication::{validate_credentials, AuthError, Credentials};
 use crate::domain::SubscriberEmail;
 use crate::email_client::EmailClient;
 use crate::routes::error_chain_fmt;
+use actix_web::http::header::{HeaderMap, HeaderValue};
+use actix_web::http::{header, StatusCode};
+use actix_web::{web, HttpRequest, HttpResponse, ResponseError};
+use anyhow::Context;
+use secrecy::Secret;
+use sqlx::PgPool;
+use std::fmt::Formatter;
 
 #[derive(serde::Deserialize)]
 pub struct BodyData {
@@ -44,8 +44,7 @@ impl ResponseError for PublishError {
             }
             PublishError::AuthError(_) => {
                 let mut response = HttpResponse::new(StatusCode::UNAUTHORIZED);
-                let header_value = HeaderValue::from_str(r#"Basic realm="publish""#)
-                    .unwrap();
+                let header_value = HeaderValue::from_str(r#"Basic realm="publish""#).unwrap();
                 response
                     .headers_mut()
                     .insert(header::WWW_AUTHENTICATE, header_value);
@@ -66,22 +65,15 @@ pub async fn publish_newsletter(
     email_client: web::Data<EmailClient>,
     request: HttpRequest,
 ) -> Result<HttpResponse, PublishError> {
-    let credentials = basic_authentication(request.headers())
-        .map_err(PublishError::AuthError)?;
-    tracing::Span::current().record(
-        "username",
-        &tracing::field::display(&credentials.username),
-    );
+    let credentials = basic_authentication(request.headers()).map_err(PublishError::AuthError)?;
+    tracing::Span::current().record("username", &tracing::field::display(&credentials.username));
     let user_id = validate_credentials(credentials, &pool)
         .await
-        .map_err(|e|match e {
-            AuthError::InvalidCredentials(_) => {PublishError::AuthError(e.into())}
-            AuthError::UnexpectedError(_) => {PublishError::UnexpectedError(e.into())}
+        .map_err(|e| match e {
+            AuthError::InvalidCredentials(_) => PublishError::AuthError(e.into()),
+            AuthError::UnexpectedError(_) => PublishError::UnexpectedError(e.into()),
         })?;
-    tracing::Span::current().record(
-        "user_id",
-        &tracing::field::display(&user_id),
-    );
+    tracing::Span::current().record("user_id", &tracing::field::display(&user_id));
     let subscribers = get_confirmed_subscribers(&pool).await?;
     for subscriber in subscribers {
         match subscriber {
@@ -95,9 +87,7 @@ pub async fn publish_newsletter(
                     )
                     .await
                     .with_context(|| {
-                        format!("Failed to send newsletter issue to {}",
-                                subscriber.email
-                        )
+                        format!("Failed to send newsletter issue to {}", subscriber.email)
                     })?;
             }
             Err(error) => {
@@ -157,13 +147,13 @@ async fn get_confirmed_subscribers(
         WHERE status = 'confirmed'
         "#,
     )
-        .fetch_all(pool)
-        .await?
-        .into_iter()
-        .map(|r| match SubscriberEmail::parse(r.email) {
-            Ok(email) => Ok(ConfirmedSubscriber { email }),
-            Err(error) => Err(anyhow::anyhow!(error)),
-        })
-        .collect();
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|r| match SubscriberEmail::parse(r.email) {
+        Ok(email) => Ok(ConfirmedSubscriber { email }),
+        Err(error) => Err(anyhow::anyhow!(error)),
+    })
+    .collect();
     Ok(confirmed_subscribers)
 }
