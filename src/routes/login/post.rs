@@ -7,6 +7,7 @@ use actix_web::{web, HttpResponse, ResponseError};
 use secrecy::Secret;
 use sqlx::PgPool;
 use std::fmt::Formatter;
+use actix_web::cookie::Cookie;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -42,6 +43,7 @@ pub async fn login(
             };
             let response = HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/login"))
+                .cookie(Cookie::new("_flash",e.to_string()))
                 .finish();
             Err(InternalError::from_response(e, response))
         }
