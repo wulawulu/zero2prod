@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 set -x
 set -eo pipefail
 # if a redis container is running, print instructions to kill it and exit
