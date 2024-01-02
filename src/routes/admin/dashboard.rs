@@ -1,9 +1,9 @@
+use crate::session_state::TypedSession;
 use actix_web::http::header::{ContentType, LOCATION};
 use actix_web::{web, HttpResponse};
 use anyhow::Context;
 use sqlx::PgPool;
 use uuid::Uuid;
-use crate::session_state::TypedSession;
 
 fn e500<T>(e: T) -> actix_web::Error
 where
