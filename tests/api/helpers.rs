@@ -77,8 +77,8 @@ impl TestApp {
     }
 
     pub async fn post_login<Body>(&self, body: &Body) -> Response
-    where
-        Body: serde::Serialize,
+        where
+            Body: serde::Serialize,
     {
         self.api_client
             .post(&format!("{}/login", &self.address))
@@ -109,6 +109,26 @@ impl TestApp {
 
     pub async fn get_admin_dashboard_html(&self) -> String {
         self.get_admin_dashboard().await.text().await.unwrap()
+    }
+
+    pub async fn get_change_password(&self) -> Response {
+        self.api_client
+            .get(&format!("{}/admin/password", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn post_change_password<Body>(&self, body: &Body) -> Response
+        where
+            Body: serde::Serialize,
+    {
+        self.api_client
+            .post(&format!("{}/admin/password", &self.address))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
     }
 }
 
@@ -193,9 +213,9 @@ impl TestUser {
             Version::V0x13,
             Params::new(15000, 2, 1, None).unwrap(),
         )
-        .hash_password(self.password.as_bytes(), &salt)
-        .unwrap()
-        .to_string();
+            .hash_password(self.password.as_bytes(), &salt)
+            .unwrap()
+            .to_string();
         sqlx::query!(
             "INSERT INTO users (user_id, username, password_hash)
             VALUES ($1, $2, $3)",
@@ -203,9 +223,9 @@ impl TestUser {
             self.username,
             password_hash,
         )
-        .execute(pool)
-        .await
-        .expect("Failed to store test user.");
+            .execute(pool)
+            .await
+            .expect("Failed to store test user.");
     }
 }
 
