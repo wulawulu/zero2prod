@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 # 开启调试模式
 set -x
 
