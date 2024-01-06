@@ -1,10 +1,10 @@
 use crate::session_state::TypedSession;
+use crate::utils::e500;
 use actix_web::http::header::{ContentType, LOCATION};
-use actix_web::{HttpResponse, web};
+use actix_web::{web, HttpResponse};
 use anyhow::Context;
 use sqlx::PgPool;
 use uuid::Uuid;
-use crate::utils::e500;
 
 pub async fn admin_dashboard(
     session: TypedSession,
@@ -52,8 +52,8 @@ pub async fn get_username(user_id: Uuid, pool: &PgPool) -> Result<String, anyhow
         "#,
         user_id
     )
-        .fetch_one(pool)
-        .await
-        .context("Failed to perform a query to retrieve a username.")?;
+    .fetch_one(pool)
+    .await
+    .context("Failed to perform a query to retrieve a username.")?;
     Ok(row.username)
 }

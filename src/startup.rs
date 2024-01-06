@@ -14,7 +14,10 @@ use sqlx::{PgPool, Pool, Postgres};
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
-use crate::routes::{admin_dashboard, change_password, change_password_form, confirm, health_check, home, log_out, login, login_form, publish_newsletter, subscribe};
+use crate::routes::{
+    admin_dashboard, change_password, change_password_form, confirm, health_check, home, log_out,
+    login, login_form, publish_newsletter, subscribe,
+};
 
 pub struct Application {
     port: u16,

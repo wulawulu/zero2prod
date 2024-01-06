@@ -1,5 +1,5 @@
-use uuid::Uuid;
 use crate::helpers::{assert_is_redirect_to, spawn_app};
+use uuid::Uuid;
 
 #[tokio::test]
 async fn you_must_be_logged_in_to_see_the_change_password_form() {
@@ -38,22 +38,21 @@ async fn new_password_fields_must_match() {
         "username": &app.test_user.username,
         "password": &app.test_user.password,
     }))
-        .await;
+    .await;
 
     // Act - Part 2 - Try to change password
     let response = app
         .post_change_password(&serde_json::json!({
-            "current_password": &app.test_user.password,
-            "new_password": &new_password,
-            "new_password_check": &another_new_password,
-            }))
+        "current_password": &app.test_user.password,
+        "new_password": &new_password,
+        "new_password_check": &another_new_password,
+        }))
         .await;
     assert_is_redirect_to(&response, "/admin/password");
 
     let html_page = app.get_change_password_html().await;
     assert!(html_page.contains(
         "<p><i>You entered two different new passwords - the filed values must match.</i></p>"
-
     ));
 }
 
@@ -67,23 +66,20 @@ async fn current_password_must_be_valid() {
         "username": &app.test_user.username,
         "password": &app.test_user.password,
     }))
-        .await;
+    .await;
 
     // Act - Part 2 - Try to change password
     let response = app
         .post_change_password(&serde_json::json!({
-            "current_password": &wrong_password,
-            "new_password": &new_password,
-            "new_password_check": &new_password,
-            }))
+        "current_password": &wrong_password,
+        "new_password": &new_password,
+        "new_password_check": &new_password,
+        }))
         .await;
     assert_is_redirect_to(&response, "/admin/password");
 
     let html_page = app.get_change_password_html().await;
-    assert!(html_page.contains(
-        "<p><i>The current password is incorrect.</i></p>"
-
-    ));
+    assert!(html_page.contains("<p><i>The current password is incorrect.</i></p>"));
 }
 
 #[tokio::test]
@@ -103,10 +99,10 @@ async fn current_password_works() {
     // Act - Part 2 - change password
     let response = app
         .post_change_password(&serde_json::json!({
-            "current_password": &&app.test_user.password,
-            "new_password": &new_password,
-            "new_password_check": &new_password,
-            }))
+        "current_password": &&app.test_user.password,
+        "new_password": &new_password,
+        "new_password_check": &new_password,
+        }))
         .await;
     assert_is_redirect_to(&response, "/admin/password");
 

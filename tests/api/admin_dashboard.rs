@@ -7,8 +7,6 @@ async fn you_must_be_logged_in_a_access_the_admin_dashboard() {
     assert_is_redirect_to(&response, "/login")
 }
 
-
-
 #[tokio::test]
 async fn logout_clears_session_state() {
     // Arrange
