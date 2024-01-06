@@ -1,16 +1,17 @@
-use crate::authentication::Userid;
 use crate::domain::SubscriberEmail;
 use crate::email_client::EmailClient;
 use crate::routes::error_chain_fmt;
+use crate::utils::see_other;
 use actix_web::http::header::HeaderValue;
 use actix_web::http::{header, StatusCode};
 use actix_web::{web, HttpResponse, ResponseError};
+use actix_web_flash_messages::FlashMessage;
 use anyhow::Context;
 use sqlx::PgPool;
 use std::fmt::Formatter;
 
 #[derive(serde::Deserialize)]
-pub struct BodyData {
+pub struct FormData {
     title: String,
     html_content: String,
     text_content: String,
@@ -48,19 +49,12 @@ impl ResponseError for PublishError {
     }
 }
 
-#[tracing::instrument(
-name = "Publish a newsletter issue",
-skip(body, pool, email_client),
-fields(username = tracing::field::Empty, user_id = tracing::field::Empty)
-)]
+#[tracing::instrument(name = "Publish a newsletter issue", skip_all)]
 pub async fn publish_newsletter(
-    body: web::Form<BodyData>,
+    form: web::Form<FormData>,
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
-    user_id: web::ReqData<Userid>,
 ) -> Result<HttpResponse, PublishError> {
-    let user_id = user_id.into_inner();
-    tracing::Span::current().record("user_id", &tracing::field::display(*user_id));
     let subscribers = get_confirmed_subscribers(&pool).await?;
     for subscriber in subscribers {
         match subscriber {
@@ -68,9 +62,9 @@ pub async fn publish_newsletter(
                 email_client
                     .send_email(
                         &subscriber.email,
-                        &body.title,
-                        &body.html_content,
-                        &body.text_content,
+                        &form.title,
+                        &form.html_content,
+                        &form.text_content,
                     )
                     .await
                     .with_context(|| {
@@ -86,7 +80,8 @@ pub async fn publish_newsletter(
             }
         }
     }
-    Ok(HttpResponse::Ok().finish())
+    FlashMessage::info("The newsletter issue has been published!").send();
+    Ok(see_other("/admin/newsletters"))
 }
 
 struct ConfirmedSubscriber {
