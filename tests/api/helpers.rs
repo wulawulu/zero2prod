@@ -68,7 +68,7 @@ impl TestApp {
 
     pub async fn post_newsletters(&self, body: serde_json::Value) -> Response {
         self.api_client
-            .post(&format!("{}/newsletters", &self.address))
+            .post(&format!("{}/admin/newsletters", &self.address))
             .basic_auth(&self.test_user.username, Some(&self.test_user.password))
             .json(&body)
             .send()
@@ -141,6 +141,14 @@ impl TestApp {
             .send()
             .await
             .expect("Failed to execute request.")
+    }
+
+    pub async fn login(&self) {
+        let login_body = serde_json::json!({
+            "username": &self.test_user.username,
+            "password": &self.test_user.password
+        });
+        self.post_login(&login_body).await;
     }
 }
 
