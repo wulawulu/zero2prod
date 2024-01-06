@@ -66,18 +66,6 @@ impl TestApp {
         ConfirmationLinks { html, plain_text }
     }
 
-    pub async fn post_newsletters<Body>(&self, body: &Body) -> Response
-    where
-        Body: serde::Serialize,
-    {
-        self.api_client
-            .post(&format!("{}/admin/newsletters", &self.address))
-            .form(body)
-            .send()
-            .await
-            .expect("Failed to execute request.")
-    }
-
     pub async fn post_login<Body>(&self, body: &Body) -> Response
     where
         Body: serde::Serialize,
@@ -151,6 +139,30 @@ impl TestApp {
             "password": &self.test_user.password
         });
         self.post_login(&login_body).await;
+    }
+
+    pub async fn get_publish_newsletter(&self) -> Response {
+        self.api_client
+            .get(&format!("{}/admin/newsletters", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn get_publish_newsletter_html(&self) -> String {
+        self.get_publish_newsletter().await.text().await.unwrap()
+    }
+
+    pub async fn post_publish_newsletter<Body>(&self, body: &Body) -> Response
+    where
+        Body: serde::Serialize,
+    {
+        self.api_client
+            .post(&format!("{}/admin/newsletters", &self.address))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
     }
 }
 

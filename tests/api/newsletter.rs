@@ -19,7 +19,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
         "text_content":"Newsletter body as plain text",
         "html_content":"<p>Newsletter body as HTML</p>"
     });
-    let response = app.post_newsletters(&newsletter_request_body).await;
+    let response = app.post_publish_newsletter(&newsletter_request_body).await;
 
     assert_eq!(response.status().as_u16(), 200);
 }
@@ -42,7 +42,7 @@ async fn newsletters_are_delivered_to_confirmed_subscriber() {
         "text_content":"Newsletter body as plain text",
         "html_content":"<p>Newsletter body as HTML</p>"
     });
-    let response = app.post_newsletters(&newsletter_request_body).await;
+    let response = app.post_publish_newsletter(&newsletter_request_body).await;
     assert_eq!(response.status().as_u16(), 200);
 }
 
@@ -62,7 +62,7 @@ async fn newsletters_returns_400_for_invalid_data() {
     ];
 
     for (invalid_body, error_message) in test_cases {
-        let response = app.post_newsletters(&invalid_body).await;
+        let response = app.post_publish_newsletter(&invalid_body).await;
 
         assert_eq!(
             400,
@@ -108,14 +108,27 @@ async fn create_confirmed_subscriber(app: &TestApp) {
 }
 
 #[tokio::test]
-async fn not_logged_user_are_redirect_to_login_page() {
+async fn you_must_be_logged_in_to_see_the_newsletter_form() {
+    let app = spawn_app().await;
+
+    // Act
+    let response = app.get_publish_newsletter().await;
+
+    // Assert
+    assert_is_redirect_to(&response, "/login");
+}
+
+#[tokio::test]
+async fn you_must_logged_in_to_publish_a_newsletter() {
     // Arrange
     let app = spawn_app().await;
-    let response = app.post_newsletters(&serde_json::json!({
-        "title":"Newsletter title",
-        "text_content":"Newsletter body as plain text",
-        "html_content":"<p>Newsletter body as HTML</p>"
-    })).await;
+    let response = app
+        .post_publish_newsletter(&serde_json::json!({
+            "title":"Newsletter title",
+            "text_content":"Newsletter body as plain text",
+            "html_content":"<p>Newsletter body as HTML</p>"
+        }))
+        .await;
     // Assert
     assert_is_redirect_to(&response, "/login");
 }
