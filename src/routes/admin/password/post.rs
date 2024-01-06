@@ -7,7 +7,6 @@ use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
 use sqlx::PgPool;
 
-
 #[derive(Deserialize)]
 pub struct FormData {
     current_password: Secret<String>,
@@ -18,7 +17,7 @@ pub struct FormData {
 pub async fn change_password(
     form: web::Form<FormData>,
     pool: web::Data<PgPool>,
-    user_id: web::ReqData<Userid>
+    user_id: web::ReqData<Userid>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let user_id = user_id.into_inner();
     if form.new_password.expose_secret() != form.new_password_check.expose_secret() {
