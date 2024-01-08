@@ -11,7 +11,7 @@ use sqlx::{PgPool};
 use std::fmt::Formatter;
 use actix_web::web::ReqData;
 use crate::authentication::Userid;
-use crate::idempotency::{get_saved_response, IdempotencyKey, save_response};
+use crate::idempotency::{IdempotencyKey, NextAction, save_response, try_processing};
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -63,12 +63,15 @@ pub async fn publish_newsletter(
     let user_id = user_id.into_inner();
     let FormData{ title, html_content, text_content, idempotency_key } = form.0;
     let idempotency_key:IdempotencyKey = idempotency_key.try_into().map_err(e400)?;
-    // return early if we have a saved response in the database
-    if let Some(saved_response)=get_saved_response(&pool,&idempotency_key,*user_id)
-        .await
-        .map_err(e500)?{
-        return Ok(saved_response)
+
+    match try_processing(&pool, &idempotency_key, *user_id).await.map_err(e500)? {
+        NextAction::StartProcessing => {}
+        NextAction::ReturnSavedResponse(saved_response) => {
+            success_message().send();
+            return Ok(saved_response);
+        }
     }
+
     let subscribers = get_confirmed_subscribers(&pool).await.map_err(e500)?;
     for subscriber in subscribers {
         match subscriber {
@@ -94,13 +97,17 @@ pub async fn publish_newsletter(
             }
         }
     }
-    FlashMessage::info("The newsletter issue has been published!").send();
+    success_message().send();
     let response = see_other("/admin/newsletters");
     let response = save_response(&pool, &idempotency_key, *user_id, response)
         .await
         .map_err(e500)?;
 
     Ok(response)
+}
+
+fn success_message() -> FlashMessage {
+    FlashMessage::info("The newsletter issue has been published!")
 }
 
 struct ConfirmedSubscriber {
