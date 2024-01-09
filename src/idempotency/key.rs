@@ -14,7 +14,8 @@ impl TryFrom<String> for IdempotencyKey {
         if s.length() >= max_length {
             anyhow::bail!(
                 "The idempotency key must be shorter
-                than {max_length} characters");
+                than {max_length} characters"
+            );
         }
         Ok(Self(s))
     }
