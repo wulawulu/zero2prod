@@ -1,8 +1,8 @@
 use crate::helpers::{assert_is_redirect_to, spawn_app, ConfirmationLinks, TestApp};
-use std::time::Duration;
-use fake::Fake;
 use fake::faker::internet::en::SafeEmail;
 use fake::faker::name::en::Name;
+use fake::Fake;
+use std::time::Duration;
 use wiremock::matchers::{any, method, path};
 use wiremock::{Mock, MockBuilder, ResponseTemplate};
 
@@ -85,7 +85,8 @@ async fn create_unconfirmed_subscriber(app: &TestApp) -> ConfirmationLinks {
     let body = serde_urlencoded::to_string(&serde_json::json!({
         "name":name,
         "email":email
-    })).unwrap();
+    }))
+    .unwrap();
     let _mock_guard = when_sending_an_email()
         .respond_with(ResponseTemplate::new(200))
         .named("Create unconfirmed subscriber")
@@ -204,7 +205,7 @@ async fn concurrent_form_submission_is_handled_gracefully() {
 }
 
 #[tokio::test]
-async fn transient_errors_do_not_cause_duplicate_deliveries_on_retries(){
+async fn transient_errors_do_not_cause_duplicate_deliveries_on_retries() {
     let app = spawn_app().await;
     let newsletter_request_body = serde_json::json!({
         "title":"Newsletter title",
@@ -244,6 +245,5 @@ async fn transient_errors_do_not_cause_duplicate_deliveries_on_retries(){
 }
 
 fn when_sending_an_email() -> MockBuilder {
-    Mock::given(path("/email"))
-        .and(method("POST"))
+    Mock::given(path("/email")).and(method("POST"))
 }
